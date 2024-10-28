@@ -41,7 +41,18 @@ class GN_force_SiLU(MessagePassing):
             
             Lin(hidden, msg_dim)
         )
-        
+
+        self.node_fnc = Seq(
+            Lin(msg_dim+n_f, hidden),
+            SiLU(),
+            Lin(hidden, hidden),
+            SiLU(),
+            Lin(hidden, hidden),
+            SiLU(),
+#             Lin(hidden, hidden),
+#             SiLU(),
+            Lin(hidden, ndim)
+        )
 
     def forward(self, x, edge_index, edge_feature):
         #x is [n, n_f]
@@ -69,7 +80,7 @@ class GN_force_SiLU(MessagePassing):
     
     def update(self, aggr_out, x=None):
         # aggr_out has shape [n, msg_dim]
-        # tmp = torch.cat([x, aggr_out], dim=1)
-        # return aggr_out / x[:, -1][:, None]
+        tmp = torch.cat([x, aggr_out], dim=1)
+        return self.node_fnc(tmp) / x[:, -1][:, None]
         
-        return aggr_out # not dividing mass here
+        # return aggr_out # not dividing mass here
