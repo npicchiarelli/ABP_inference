@@ -8,7 +8,7 @@ import torch
 from torch import nn
 from torch.functional import F
 from torch.optim import Adam
-from torch_geometric.nn import MetaLayer, MessagePassing
+from torch_geometric.nn import MetaLayer, MessagePassing # type: ignore
 from torch.nn import Sequential as Seq, Linear as Lin, SiLU
 from torch.autograd import Variable, grad
 

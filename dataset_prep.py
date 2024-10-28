@@ -15,9 +15,10 @@ def data_prep(dir: str, datestamp: str, timestep: float, R: float, datafname: st
 
     #Directory reading and storing in dataframes
     path_list = []
-    for i,path in enumerate(datafolder.iterdir()):
+    for path in datafolder.iterdir():
         if path.is_dir():
-            df_path = path / f"{datestamp}_run{i+1}.txt"
+            num = path.name[3:]
+            df_path = path / f"{datestamp}_run{num}.txt"
             path_list.append(df_path)
 
     df_list = []
@@ -71,5 +72,8 @@ def data_prep(dir: str, datestamp: str, timestep: float, R: float, datafname: st
     "drag_coefficient": gamma,
     "edge_list": edges,}
 
-    with open(datafname+'.pkl', '+rb') as f:
+    fdata = datafname+'.pkl'
+    pathlib.Path(fdata).touch()
+
+    with open(fdata, '+rb') as f:
         pkl.dump(data, f)
