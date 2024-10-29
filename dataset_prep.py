@@ -27,6 +27,7 @@ def data_prep(dir: str, datestamp: str, timestep: float, R: float, datafname: st
         
     #Velocity calculation and NaN dropping
     for df in df_list:
+        df.sort_values(by=["N","Time"],inplace=True)
         df[["vx","vy"]] = df.groupby("N")[["xpos","ypos"]].diff()/timestep #velocity calculation
         df.dropna(inplace=True)
         df["Time"]=df["Time"]-1
