@@ -25,6 +25,9 @@ def data_prep(dir: str, datestamp: str, timestep: float, R: float, datafname: st
     for path in path_list:
         df_list.append(pd.read_csv(path))
         
+    if len(np.unique(df_list[0].Time)) != max(df_list[0].Time):
+        timestep = timestep*(max(df_list[0].Time)-1)/(len(np.unique(df_list[0].Time))-1)
+
     #Velocity calculation and NaN dropping
     for df in df_list:
         df.sort_values(by=["N","Time"],inplace=True)
@@ -32,13 +35,16 @@ def data_prep(dir: str, datestamp: str, timestep: float, R: float, datafname: st
         df.dropna(inplace=True)
         df["Time"]=df["Time"]-1
 
-    #Velocity and position reshaping
+    #Velocity, position, force, angle  reshaping
     num_exp = len(df_list)
     Np = df_list[0].N.max()
-    num_steps = df_list[0].Time.max()
+    num_steps = len(np.unique(df_list[0].Time))
 
     ppos = []
     vv = []
+    angle_ = []
+    force_ = []
+
     for df in df_list:
         Np = df.N.max()
         x = np.array(df.xpos).reshape(Np,-1)
@@ -46,16 +52,30 @@ def data_prep(dir: str, datestamp: str, timestep: float, R: float, datafname: st
         xy = np.stack([x,y],axis=2)
         ppos.append(xy)
 
+        fx = np.array(df.fx).reshape(Np,-1)
+        fy = np.array(df.fy).reshape(Np,-1)
+        fxy = np.stack([fx,fy],axis=2)
+        force_.append(fxy)
+
         vx = np.array(df.vx).reshape(Np,-1)
         vy = np.array(df.vy).reshape(Np,-1)
         vxy = np.stack([vx,vy],axis=2)
         vv.append(vxy)
 
+        theta = np.array(df.orientation).reshape(Np,-1)
+        angle_.append(theta)
+
     position = np.stack(ppos,axis=3)
     position = np.transpose(position,(3,1,0,2))
 
+    force = np.stack(force_,axis=3)
+    force = np.transpose(force,(3,1,0,2))
+
     vel = np.stack(vv,axis=3)
     vel = np.transpose(vel,(3,1,0,2))
+
+    angle = np.stack(angle_, axis=2)[:,np.newaxis]
+    angle = np.transpose(angle,(3,2,0,1))
 
     #Drag calculation
     gamma = 6*np.pi*R*1e-3
@@ -70,7 +90,9 @@ def data_prep(dir: str, datestamp: str, timestep: float, R: float, datafname: st
     data = {
     "position": position,
     "velocity": vel,
+    "orientation":angle,
     "drag_coefficient": gamma,
+    "node_force": force,
     "edge_list": edges,}
 
     fdata = datafname+'.pkl'
