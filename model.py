@@ -80,7 +80,7 @@ class GN_force_SiLU(MessagePassing):
     
     def update(self, aggr_out, x=None):
         # aggr_out has shape [n, msg_dim]
-        tmp = torch.cat([x, aggr_out], dim=1)
-        return self.node_fnc(tmp) / x[:, -1][:, None]
+        # tmp = torch.cat([x, aggr_out], dim=1)
+        # return self.node_fnc(tmp) / x[:, -1][:, None]
         
-        # return aggr_out # not dividing mass here
+        return aggr_out # not dividing mass here
