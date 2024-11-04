@@ -26,7 +26,7 @@ def data_prep(dir: str, datestamp: str, timestep: float, R: float, datafname: st
         df_list.append(pd.read_csv(path))
         
     if len(np.unique(df_list[0].Time)) != max(df_list[0].Time):
-        timestep = timestep*(max(df_list[0].Time)-2)/(len(np.unique(df_list[0].Time))-2)
+        timestep = timestep*(round(max(df_list[0].Time)/10)*10)/(round(len(np.unique(df_list[0].Time))/10)*10) # In order to have a round number of timesteps i will remove 2 of them after velocity calc. This is to have the right timestep considering the downsampling
 
     #Velocity calculation and NaN dropping
     for df in df_list:
