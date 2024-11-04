@@ -26,14 +26,15 @@ def data_prep(dir: str, datestamp: str, timestep: float, R: float, datafname: st
         df_list.append(pd.read_csv(path))
         
     if len(np.unique(df_list[0].Time)) != max(df_list[0].Time):
-        timestep = timestep*(max(df_list[0].Time)-1)/(len(np.unique(df_list[0].Time))-1)
+        timestep = timestep*(max(df_list[0].Time)-2)/(len(np.unique(df_list[0].Time))-2)
 
     #Velocity calculation and NaN dropping
     for df in df_list:
         df.sort_values(by=["N","Time"],inplace=True)
         df[["vx","vy"]] = df.groupby("N")[["xpos","ypos"]].diff()/timestep #velocity calculation
+        df[["ax","ay"]] = df.groupby("N")[["vx","vy"]].diff()/timestep #acceleration calculation
         df.dropna(inplace=True)
-        df["Time"]=df["Time"]-1
+        df["Time"]=df["Time"]-2
 
     #Velocity, position, force, angle  reshaping
     num_exp = len(df_list)
@@ -44,6 +45,7 @@ def data_prep(dir: str, datestamp: str, timestep: float, R: float, datafname: st
     vv = []
     angle_ = []
     force_ = []
+    acc_ = []
 
     for df in df_list:
         Np = df.N.max()
@@ -62,6 +64,11 @@ def data_prep(dir: str, datestamp: str, timestep: float, R: float, datafname: st
         vxy = np.stack([vx,vy],axis=2)
         vv.append(vxy)
 
+        ax = np.array(df.ax).reshape(Np,-1)
+        ay = np.array(df.ay).reshape(Np,-1)
+        axy = np.stack([ax,ay],axis=2)
+        acc_.append(axy)
+
         theta = np.array(df.orientation).reshape(Np,-1)
         angle_.append(theta)
 
@@ -73,6 +80,9 @@ def data_prep(dir: str, datestamp: str, timestep: float, R: float, datafname: st
 
     vel = np.stack(vv,axis=3)
     vel = np.transpose(vel,(3,1,0,2))
+
+    acc = np.stack(acc_,axis=3)
+    acc = np.transpose(acc,(3,1,0,2))
 
     angle = np.stack(angle_, axis=2)[:,np.newaxis]
     angle = np.transpose(angle,(3,2,0,1))
@@ -90,6 +100,7 @@ def data_prep(dir: str, datestamp: str, timestep: float, R: float, datafname: st
     data = {
     "position": position,
     "velocity": vel,
+    "acceleration": acc,
     "orientation":angle,
     "drag_coefficient": gamma,
     "node_force": force,
