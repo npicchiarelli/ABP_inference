@@ -74,7 +74,7 @@ class GN(MessagePassing):
     
     def update(self, aggr_out, x=None):
         # aggr_out has shape [n, msg_dim]
-
+        self.last_aggr_out = aggr_out
         tmp = torch.cat([x, aggr_out], dim=1)
         return self.node_fnc(tmp) #[n, nupdate]
 
@@ -111,8 +111,11 @@ class OGN(GN):
         else:
             return torch.sum(torch.abs(g.y - self.just_derivative(g, augment=augment)))
     
-    def get_aggr_out(self, aggr_out):
-        return aggr_out
+    def get_aggr_out(self):
+        # Return the last aggregated output
+        if self.last_aggr_out is None:
+            raise ValueError("Aggregation output is not computed yet. Call forward first.")
+        return self.last_aggr_out
 
 
 
