@@ -110,6 +110,9 @@ class OGN(GN):
             return torch.sum((g.y - self.just_derivative(g, augment=augment, augmentation=augmentation))**2)
         else:
             return torch.sum(torch.abs(g.y - self.just_derivative(g, augment=augment)))
+    
+    def get_aggr_out(self, aggr_out):
+        return aggr_out
 
 
 
